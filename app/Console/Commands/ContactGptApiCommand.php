@@ -8,6 +8,7 @@ use App\DTO\GptApi\GptApiHistoryDTO;
 use App\DTO\GptApi\GptApiMessageDTO;
 use App\DTO\GptApi\Request\GptApiRequestDTO;
 use App\DTO\GptApi\Response\GptApiResponseDTO;
+use App\DTO\GptApi\WithHistory;
 use Illuminate\Console\Command;
 use phpDocumentor\Reflection\Types\Collection;
 use Symfony\Component\Console\Input\InputArgument;
@@ -47,7 +48,7 @@ class ContactGptApiCommand extends Command
     public function __construct(public AskGptApi $askGptApi)
     {
         $this->apiHistory = GptApiHistoryCollectionDTO::from([
-            'actions' => [],
+           'items' => [],
         ]);
         parent::__construct();
     }
@@ -76,11 +77,12 @@ class ContactGptApiCommand extends Command
         $usedTokenProgressbar->start(startAt: $this->usedToken);
 
         while ($this->usedToken < $this->argument('max_token')) {
-//            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-//                system('cls');
-//            } else {
-//                system('clear');
-//            }
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                system('cls');
+            } else {
+                system('clear');
+            }
+            $this->showMessagesHistory();
             $response = $this->sendSingleMessageWithAsk();
             $this->info($response->getMessage());
             $this->infoTokenUsed();
@@ -129,7 +131,8 @@ class ContactGptApiCommand extends Command
         return GptApiRequestDTO::from([
             'apiKey' => env('OPEN_AI_KEY'),
             'model' => 'gpt-3.5-turbo',
-            'maxToken' => $this->argument('max_response_token'),
+//            'maxToken' => $this->argument('max_response_token'),
+            'maxToken' => 1,
             'message' => GptApiMessageDTO::from([
                 'content' => 'Placeholder',
                 'role' => 'user',
@@ -152,10 +155,22 @@ class ContactGptApiCommand extends Command
      */
     public function updateConversationHistory(GptApiRequestDTO|GptApiResponseDTO $action): void
     {
+        $currentHistory = $this->apiHistory;
+
         $actionClass = get_class($action);
-        $current = $this->apiHistory->actions->items();
-        $current[] = $action;
-        $this->apiHistory->actions =  $actionClass::collection($current);
+        $historyProperty = $actionClass::$historyProperty;
+        $newHistoryItem = GptApiHistoryDTO::from([
+           $historyProperty => $action,
+        ]);
+
+        $this->apiHistory = GptApiHistoryCollectionDTO::from([
+            'items' => [...$currentHistory->items()->map(
+                static fn(GptApiHistoryDTO $historyDTO) => GptApiHistoryDTO::from([
+                    'request' => $historyDTO->request,
+                    'response' => $historyDTO->response,
+                ]),
+            )->toArray(),$newHistoryItem],
+        ]);
     }
 
     /**
@@ -163,6 +178,16 @@ class ContactGptApiCommand extends Command
      */
     public function showMessagesHistory(): void
     {
-        dd($this->apiHistory);
+        $this->apiHistory->items()->map(
+            function (GptApiHistoryDTO $item) {
+                $filledProperty = $item->request ? 'request' : 'response';
+
+                /** @var WithHistory $realProperty */
+                $realProperty = $item->{$filledProperty};
+
+                $this->info($realProperty->getHistoryLabel() . ': ' . $realProperty->getHistoryContent());
+
+            }
+        );
     }
 }

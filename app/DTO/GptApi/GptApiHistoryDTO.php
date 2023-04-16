@@ -9,7 +9,8 @@ use Spatie\LaravelData\Data;
 class GptApiHistoryDTO extends Data
 {
     public function __construct(
-        public GptApiResponseDTO|GptApiRequestDTO $action,
+        public ?GptApiResponseDTO $response,
+        public ?GptApiRequestDTO $request,
     )
     {}
 }

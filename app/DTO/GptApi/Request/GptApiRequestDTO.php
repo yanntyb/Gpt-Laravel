@@ -4,9 +4,12 @@ namespace App\DTO\GptApi\Request;
 
 use App\DTO\ExtendedData;
 use App\DTO\GptApi\GptApiMessageDTO;
+use App\DTO\GptApi\WithHistory;
 
-class GptApiRequestDTO extends ExtendedData
+class GptApiRequestDTO extends ExtendedData implements WithHistory
 {
+    public static string $historyProperty = 'request';
+
     public function __construct(
         public GptApiMessageDTO $message,
         public string $apiKey,
@@ -22,4 +25,22 @@ class GptApiRequestDTO extends ExtendedData
     {
         return $this->message->content;
     }
+
+    /**
+     * @return string
+     */
+    public function getHistoryContent(): string
+    {
+        return $this->getMessage();
+    }
+
+    /**
+     * @return string
+     */
+    public function getHistoryLabel(): string
+    {
+        return $this->message->role;
+    }
+
+
 }
