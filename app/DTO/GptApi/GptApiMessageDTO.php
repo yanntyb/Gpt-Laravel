@@ -1,10 +1,8 @@
 <?php
 
-namespace App\DTO;
+namespace App\DTO\GptApi;
 
-use Carbon\Carbon;
-use Spatie\LaravelData\Data;
-use Spatie\LaravelData\DataCollection;
+use App\DTO\ExtendedData;
 
 class GptApiMessageDTO extends ExtendedData
 {

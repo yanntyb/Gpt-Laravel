@@ -3,17 +3,20 @@
 namespace App\Console\Commands;
 
 use App\Actions\AskGptApi;
-use App\DTO\GptApiMessageDTO;
-use App\DTO\GptApiRequestDTO;
-use App\DTO\GptApiResponseDTO;
+use App\DTO\GptApi\GptApiHistoryCollectionDTO;
+use App\DTO\GptApi\GptApiHistoryDTO;
+use App\DTO\GptApi\GptApiMessageDTO;
+use App\DTO\GptApi\Request\GptApiRequestDTO;
+use App\DTO\GptApi\Response\GptApiResponseDTO;
 use Illuminate\Console\Command;
+use phpDocumentor\Reflection\Types\Collection;
 use Symfony\Component\Console\Input\InputArgument;
 
 class ContactGptApiCommand extends Command
 {
 
     public int $usedToken = 0;
-    public int $maxResponseToken;
+    public GptApiHistoryCollectionDTO $apiHistory;
 
     protected function configure(): void
     {
@@ -43,6 +46,9 @@ class ContactGptApiCommand extends Command
 
     public function __construct(public AskGptApi $askGptApi)
     {
+        $this->apiHistory = GptApiHistoryCollectionDTO::from([
+            'actions' => [],
+        ]);
         parent::__construct();
     }
 
@@ -62,15 +68,22 @@ class ContactGptApiCommand extends Command
     public function conversation(): void
     {
         $firstMessage = $this->sendSingleMessage($this->argument('prompt'));
-        $this->info($firstMessage->getFirstResponseMessageContent());
+        $this->info($firstMessage->getMessage());
+        $this->infoTokenUsed();
 
         $usedTokenProgressbar = $this->output->createProgressBar($this->argument('max_token'));
 
-        $usedTokenProgressbar->start();
+        $usedTokenProgressbar->start(startAt: $this->usedToken);
 
         while ($this->usedToken < $this->argument('max_token')) {
+//            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+//                system('cls');
+//            } else {
+//                system('clear');
+//            }
             $response = $this->sendSingleMessageWithAsk();
-            $this->info($response->getFirstResponseMessageContent());
+            $this->info($response->getMessage());
+            $this->infoTokenUsed();
             $usedTokenProgressbar->advance($response->usage->totalToken);
         }
 
@@ -82,7 +95,7 @@ class ContactGptApiCommand extends Command
     {
         $userMessage = $this->argument('prompt');
         $message = $this->sendSingleMessage(message: $userMessage);
-        $this->info($message->getFirstResponseMessageContent());
+        $this->info($message->getMessage());
     }
 
     public function sendSingleMessage(string $message): GptApiResponseDTO
@@ -91,10 +104,10 @@ class ContactGptApiCommand extends Command
         $gptApiRequestDto = $this->getRequestSetup();
         $gptApiRequestDto->message->changePropertyValue('content', $message);
 
-
+        $this->updateConversationHistory($gptApiRequestDto);
         $response = $this->askGptApi->handle($gptApiRequestDto);
+        $this->updateConversationHistory($response);
         $this->usedToken += $response->usage->totalToken;
-        $this->infoTokenUsed();
 
         return $response;
     }
@@ -130,5 +143,26 @@ class ContactGptApiCommand extends Command
     public function infoTokenUsed(): void
     {
         $this->info('Token utilisé au total: ' . $this->usedToken);
+    }
+
+    /**
+     * @param  GptApiRequestDTO|GptApiResponseDTO  $action
+     * @return void
+     * @throws \Exception
+     */
+    public function updateConversationHistory(GptApiRequestDTO|GptApiResponseDTO $action): void
+    {
+        $actionClass = get_class($action);
+        $current = $this->apiHistory->actions->items();
+        $current[] = $action;
+        $this->apiHistory->actions =  $actionClass::collection($current);
+    }
+
+    /**
+     * @return void
+     */
+    public function showMessagesHistory(): void
+    {
+        dd($this->apiHistory);
     }
 }

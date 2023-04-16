@@ -2,11 +2,11 @@
 
 namespace App\Actions;
 
-use App\DTO\GptApiIAResponseDTO;
-use App\DTO\GptApiMessageDTO;
-use App\DTO\GptApiRequestDTO;
-use App\DTO\GptApiResponseDTO;
-use App\DTO\GptApiResponseUsageDTO;
+use App\DTO\GptApi\GptApiMessageDTO;
+use App\DTO\GptApi\Request\GptApiRequestDTO;
+use App\DTO\GptApi\Response\GptApiIAResponseDTO;
+use App\DTO\GptApi\Response\GptApiResponseDTO;
+use App\DTO\GptApi\Response\GptApiResponseUsageDTO;
 use Carbon\Carbon;
 use Http;
 use Lorisleiva\Actions\Action;

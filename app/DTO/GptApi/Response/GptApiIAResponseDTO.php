@@ -1,11 +1,9 @@
 <?php
 
-namespace App\DTO;
+namespace App\DTO\GptApi\Response;
 
-use Carbon\Carbon;
-use Spatie\LaravelData\Attributes\DataCollectionOf;
+use App\DTO\GptApi\GptApiMessageDTO;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\DataCollection;
 
 class GptApiIAResponseDTO extends Data
 {

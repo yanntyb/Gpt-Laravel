@@ -1,9 +1,10 @@
 <?php
 
-namespace App\DTO;
+namespace App\DTO\GptApi\Response;
 
+use App\DTO\ExtendedData;
+use App\DTO\GptApi\GptApiMessageDTO;
 use Carbon\Carbon;
-use DeepCopy\Exception\PropertyException;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\DataCollection;
 
@@ -33,7 +34,7 @@ class GptApiResponseDTO extends ExtendedData
         return $this->getResponsesMessage()[0]?->message;
     }
 
-    public function getFirstResponseMessageContent(): string
+    public function getMessage(): string
     {
         return $this->getFirstResponseMessage()->content;
     }

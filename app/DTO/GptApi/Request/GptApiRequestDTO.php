@@ -1,8 +1,9 @@
 <?php
 
-namespace App\DTO;
+namespace App\DTO\GptApi\Request;
 
-use Spatie\LaravelData\Data;
+use App\DTO\ExtendedData;
+use App\DTO\GptApi\GptApiMessageDTO;
 
 class GptApiRequestDTO extends ExtendedData
 {
@@ -13,4 +14,12 @@ class GptApiRequestDTO extends ExtendedData
         public string $baseUrl = 'https://api.openai.com/v1/chat/completions',
         public int $maxToken = 100,
     ) {}
+
+    /**
+     * @return string
+     */
+    public function getMessage(): string
+    {
+        return $this->message->content;
+    }
 }
