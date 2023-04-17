@@ -24,7 +24,8 @@ class ExtendedData extends Data
             );
         }
 
-        $this->{$propertyName} = $value;
-        return $this;
+        $clone = clone $this;
+        $clone->{$propertyName} = $value;
+        return $clone;
     }
 }

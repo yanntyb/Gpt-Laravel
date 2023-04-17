@@ -27,7 +27,7 @@ class ContactGptApiCommand extends Command
                 'max_token',
                 InputArgument::OPTIONAL,
                 'Maximum de token utilisé',
-                1
+                1000
             )
             ->addArgument(
                 'max_response_token',
@@ -104,19 +104,24 @@ class ContactGptApiCommand extends Command
     {
         $gptApiRequestDto = $this->getRequestSetup();
 
-        $gptApiRequestDto->message->changePropertyValue('content', $message);
+        $gptApiRequestDto->message = GptApiMessageDTO::from([
+            'role' => $gptApiRequestDto->message->role,
+            'content' => $message,
+        ]);
 
 
         $this->updateConversationHistory($gptApiRequestDto);
 
+        $gptApiRequestWithHistory = clone $gptApiRequestDto;
+        $history && ($gptApiRequestWithHistory->message = GptApiMessageDTO::from([
+            'role' => $gptApiRequestDto->message->role,
+            'content' => $history . PHP_EOL .
+                ucfirst($gptApiRequestDto->getHistoryLabel()) . ': ' . $gptApiRequestDto->getMessage(),
+        ]));
 
-        $gptApiRequestDto->message->changePropertyValue(
-            'content',
-            $history . PHP_EOL .
-            ucfirst($gptApiRequestDto->getHistoryLabel()) . ': ' . $gptApiRequestDto->getMessage()
-        );
 
-        $response = $this->askGptApi->handle($gptApiRequestDto);
+
+        $response = $this->askGptApi->handle($gptApiRequestWithHistory);
         $this->updateConversationHistory($response);
         $this->usedToken += $response->usage->totalToken;
 
@@ -138,11 +143,12 @@ class ContactGptApiCommand extends Command
     public function sendHistoryMessageWithAsk(): GptApiResponseDTO
     {
         $userMessage = $this->ask('Message');
-        $pastMessage = 'En prenant compte de l\'historique des messages suivant: ' . PHP_EOL . $this->apiHistory
+        $pastMessage = 'En prenant compte du context des messages suivant: ' . PHP_EOL . $this->apiHistory
             ->getHistoryContent()
             ->map(
                 fn(GptApiHistoryContentDTO $item) => $item->role . ': ' . $item->message
             )->join(PHP_EOL, PHP_EOL);
+
 
         return $this->sendSingleMessage(
             $userMessage,
@@ -195,7 +201,7 @@ class ContactGptApiCommand extends Command
                     'request' => $historyDTO->request,
                     'response' => $historyDTO->response,
                 ]),
-            )->toArray(),$newHistoryItem],
+            )->toArray(),clone $newHistoryItem],
         ]);
 
     }
