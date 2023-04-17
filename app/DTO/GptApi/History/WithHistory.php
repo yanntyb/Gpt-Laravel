@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTO\GptApi;
+namespace App\DTO\GptApi\History;
 
 interface WithHistory
 {

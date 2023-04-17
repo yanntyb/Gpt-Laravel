@@ -30,7 +30,11 @@ class AskGptApi extends Action
      */
     public function handle(GptApiRequestDTO $apiRequest): GptApiResponseDTO
     {
-        $response =  json_decode(Http::withToken($apiRequest->apiKey)->post(
+        if ($apiRequest->fakeResponse) {
+            return $this->getFakeReponse();
+        }
+
+        $response = json_decode(Http::withToken($apiRequest->apiKey)->post(
             $apiRequest->baseUrl,
             [
                 'model' => $apiRequest->model,
@@ -63,6 +67,28 @@ class AskGptApi extends Action
                 )->toArray()
             ),
         ]);
+    }
 
+    private function getFakeReponse(): GptApiResponseDTO
+    {
+        return GptApiResponseDTO::from([
+            'id' => -1,
+            'created' => Carbon::now(),
+            'model' => 'assistant',
+            'object' => '',
+            'usage' => GptApiResponseUsageDTO::from([
+                'promptToken' => 0,
+                'completionToken' => 0,
+                'totalToken' => 0,
+            ]),
+            'responses' => GptApiIAResponseDTO::collection([[
+                'message' => GptApiMessageDTO::from([
+                    'role' => 'assistant',
+                    'content' => 'fake response',
+                ]),
+                'finishReason' => '',
+                'index' => -1,
+            ]]),
+        ]);
     }
 }

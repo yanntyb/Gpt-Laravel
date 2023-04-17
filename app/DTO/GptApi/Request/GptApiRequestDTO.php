@@ -4,7 +4,7 @@ namespace App\DTO\GptApi\Request;
 
 use App\DTO\ExtendedData;
 use App\DTO\GptApi\GptApiMessageDTO;
-use App\DTO\GptApi\WithHistory;
+use App\DTO\GptApi\History\WithHistory;
 
 class GptApiRequestDTO extends ExtendedData implements WithHistory
 {
@@ -16,6 +16,7 @@ class GptApiRequestDTO extends ExtendedData implements WithHistory
         public string $model,
         public string $baseUrl = 'https://api.openai.com/v1/chat/completions',
         public int $maxToken = 100,
+        public bool $fakeResponse = false,
     ) {}
 
     /**

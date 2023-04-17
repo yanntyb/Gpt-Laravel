@@ -4,7 +4,7 @@ namespace App\DTO\GptApi\Response;
 
 use App\DTO\ExtendedData;
 use App\DTO\GptApi\GptApiMessageDTO;
-use App\DTO\GptApi\WithHistory;
+use App\DTO\GptApi\History\WithHistory;
 use Carbon\Carbon;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\DataCollection;
